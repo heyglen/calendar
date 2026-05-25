@@ -55,6 +55,8 @@ export function useKeyboardShortcuts (onShowHelp: () => void): void {
 
   const VIEW_CYCLE: Array<'upnext' | 'day' | 'week' | 'month' | 'year'> = ['upnext', 'day', 'week', 'month', 'year']
 
+  let lastEscapeTime = 0
+
   function onKeyDown (e: KeyboardEvent): void {
     const tag = (e.target as HTMLElement).tagName
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) {
@@ -120,7 +122,9 @@ export function useKeyboardShortcuts (onShowHelp: () => void): void {
       case 'ArrowLeft': {
         if (route.path === '/') {
           e.preventDefault()
-          if (e.altKey || calendarStore.preferences.view === 'year') {
+          if (e.shiftKey && calendarStore.preferences.view === 'year') {
+            navigateToView('month')
+          } else if (e.altKey || calendarStore.preferences.view === 'year') {
             navigateAlt(-1)
           } else {
             calendarStore.viewPreferenceSetDate(addDays(calendarStore.preferences.selectedDate, -1))
@@ -131,7 +135,9 @@ export function useKeyboardShortcuts (onShowHelp: () => void): void {
       case 'ArrowRight': {
         if (route.path === '/') {
           e.preventDefault()
-          if (e.altKey || calendarStore.preferences.view === 'year') {
+          if (e.shiftKey && calendarStore.preferences.view === 'year') {
+            navigateToView('upnext')
+          } else if (e.altKey || calendarStore.preferences.view === 'year') {
             navigateAlt(1)
           } else {
             calendarStore.viewPreferenceSetDate(addDays(calendarStore.preferences.selectedDate, 1))
@@ -224,6 +230,14 @@ export function useKeyboardShortcuts (onShowHelp: () => void): void {
           appStore.dialogEventClose()
         } else if (appStore.settingsDialogOpen) {
           appStore.settingsDialogOpen = false
+        } else {
+          const now = Date.now()
+          if (now - lastEscapeTime < 400) {
+            calendarStore.viewPreferenceSetDate(today())
+            lastEscapeTime = 0
+          } else {
+            lastEscapeTime = now
+          }
         }
         break
       }

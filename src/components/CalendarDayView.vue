@@ -76,17 +76,37 @@
     appStore.settingsDialogOpen = true
   }
 
+  function parseSleepHour (time: string | null | undefined): number | null {
+    return time ? Number.parseInt(time.split(':')[0], 10) : null
+  }
+
+  function isHourInSleep (hour: number): boolean {
+    const s = parseSleepHour(sleepTimes.value.start)
+    const e = parseSleepHour(sleepTimes.value.end)
+    if (s === null || e === null) return false
+    if (s < e) return hour >= s && hour < e
+    return hour >= s || hour < e
+  }
+
+  function sleepSkip (raw: number, direction: -1 | 1): number {
+    if (!isHourInSleep(raw)) return raw
+    const s = parseSleepHour(sleepTimes.value.start)
+    const e = parseSleepHour(sleepTimes.value.end)
+    if (s === null || e === null) return raw
+    return direction === -1 ? Math.max(0, s - 1) : e
+  }
+
   function onKeyDown (e: KeyboardEvent): void {
     if (appStore.settingsDialogOpen) return
     if (e.key === 'ArrowUp') {
       e.preventDefault()
       e.stopPropagation()
-      appStore.setSelectedHour(Math.max(0, (appStore.selectedHour ?? 24) - 1))
+      appStore.setSelectedHour(sleepSkip(Math.max(0, (appStore.selectedHour ?? 24) - 1), -1))
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
       e.stopPropagation()
       const defaultHour = new Date().getHours()
-      appStore.setSelectedHour(Math.min(23, (appStore.selectedHour ?? defaultHour - 1) + 1))
+      appStore.setSelectedHour(sleepSkip(Math.min(23, (appStore.selectedHour ?? defaultHour - 1) + 1), 1))
     } else if (e.key === 'ArrowLeft' && appStore.selectedHour !== null && !e.altKey) {
       e.preventDefault()
       e.stopPropagation()

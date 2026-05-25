@@ -174,4 +174,17 @@
   max-height: 1.4em;
   opacity: 1;
 }
+
+.event-block--show-titles {
+  align-items: flex-start;
+  padding-left: 6px;
+}
+
+.event-block--show-titles .event-block__icon-wrapper {
+  justify-content: flex-start;
+}
+
+.event-block--show-titles .event-block__title {
+  text-align: left;
+}
 </style>

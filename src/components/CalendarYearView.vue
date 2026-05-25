@@ -67,12 +67,14 @@
 
     switch (e.key) {
       case 'ArrowLeft': {
+        if (e.shiftKey) break
         e.preventDefault()
         e.stopPropagation()
         selectedMonthIndex.value = (cur - 1 + 12) % 12
         break
       }
       case 'ArrowRight': {
+        if (e.shiftKey) break
         e.preventDefault()
         e.stopPropagation()
         selectedMonthIndex.value = (cur + 1) % 12

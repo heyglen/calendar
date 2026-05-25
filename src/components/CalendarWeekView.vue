@@ -124,6 +124,26 @@
     calendarStore.viewPreferenceSetView('day')
   }
 
+  function parseSleepHour (time: string | null | undefined): number | null {
+    return time ? Number.parseInt(time.split(':')[0], 10) : null
+  }
+
+  function isHourInSleep (hour: number): boolean {
+    const s = parseSleepHour(weekSleepTimes.value.start)
+    const e = parseSleepHour(weekSleepTimes.value.end)
+    if (s === null || e === null) return false
+    if (s < e) return hour >= s && hour < e
+    return hour >= s || hour < e
+  }
+
+  function sleepSkip (raw: number, direction: -1 | 1): number {
+    if (!isHourInSleep(raw)) return raw
+    const s = parseSleepHour(weekSleepTimes.value.start)
+    const e = parseSleepHour(weekSleepTimes.value.end)
+    if (s === null || e === null) return raw
+    return direction === -1 ? Math.max(0, s - 1) : e
+  }
+
   function onKeyDown (e: KeyboardEvent): void {
     if (appStore.settingsDialogOpen) return
     const col = appStore.selectedWeekColumn ?? 0
@@ -161,14 +181,14 @@
       case 'ArrowUp': {
         e.preventDefault()
         e.stopPropagation()
-        appStore.setSelectedHour(Math.max(0, hour - 1))
+        appStore.setSelectedHour(sleepSkip(Math.max(0, hour - 1), -1))
 
         break
       }
       case 'ArrowDown': {
         e.preventDefault()
         e.stopPropagation()
-        appStore.setSelectedHour(Math.min(23, hour + 1))
+        appStore.setSelectedHour(sleepSkip(Math.min(23, hour + 1), 1))
 
         break
       }

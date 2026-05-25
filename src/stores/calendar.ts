@@ -202,6 +202,27 @@ export const useCalendarStore = defineStore('calendar', () => {
     }
   }
 
+  function clearAllData (): void {
+    events.value = []
+    preferences.value = {
+      view: 'upnext',
+      selectedDate: today(),
+      showPastEvents: false,
+      use24HourClock: true,
+      sleepStart: '19:00',
+      sleepEnd: '07:00',
+      sleepSchedule: {
+        default: { start: '19:00', end: '07:00' },
+        weekdays: {},
+        overrides: [],
+      },
+      people: [],
+      activePersonFilter: null,
+      theme: 'system',
+      showEventTitles: false,
+    }
+  }
+
   function personCreate (draft: Omit<Person, 'id'>): void {
     preferences.value.people = [
       ...preferences.value.people,
@@ -257,6 +278,7 @@ export const useCalendarStore = defineStore('calendar', () => {
     preferencesSetShowEventTitles,
     getSleepTimesForDate,
     importData,
+    clearAllData,
     personCreate,
     personUpdate,
     personRemove,

@@ -284,7 +284,7 @@
 
           <!-- Data -->
           <v-window-item class="pa-4" value="data">
-            <v-tabs v-model="dataTab" color="primary" density="compact" class="mb-4">
+            <v-tabs v-model="dataTab" class="mb-4" color="primary" density="compact">
               <v-tab value="export">Export</v-tab>
               <v-tab value="import">Import</v-tab>
             </v-tabs>
@@ -335,6 +335,30 @@
             <v-snackbar v-model="importSuccess" color="success" timeout="3000">
               Data imported successfully.
             </v-snackbar>
+
+            <v-divider class="mt-4 mb-3" />
+
+            <div class="text-caption font-weight-medium text-medium-emphasis mb-2 text-uppercase" style="letter-spacing:0.06em">Danger Zone</div>
+
+            <div class="text-caption text-medium-emphasis mb-3">
+              Delete all events and reset all settings to defaults. This cannot be undone.
+            </div>
+
+            <template v-if="!confirmingReset">
+              <v-btn color="error" prepend-icon="mdi-delete-forever" variant="outlined" @click="confirmingReset = true">
+                Reset all data
+              </v-btn>
+            </template>
+
+            <template v-else>
+              <div class="text-body-2 mb-3">Are you sure? All events and settings will be permanently deleted.</div>
+
+              <div class="d-flex gap-2">
+                <v-btn color="error" variant="flat" @click="doResetAllData">Confirm reset</v-btn>
+
+                <v-btn variant="text" @click="confirmingReset = false">Cancel</v-btn>
+              </div>
+            </template>
           </v-window-item>
         </v-window>
       </v-card-text>
@@ -359,6 +383,7 @@
                 {{ personDraft.name ? personDraft.name.charAt(0).toUpperCase() : '?' }}
               </span>
             </v-avatar>
+
             <div class="person-avatar-overlay">
               <v-icon color="white" icon="mdi-camera" size="18" />
             </div>
@@ -561,6 +586,13 @@
   const importJson = ref('')
   const importError = ref('')
   const importSuccess = ref(false)
+  const confirmingReset = ref(false)
+
+  function doResetAllData (): void {
+    calendarStore.clearAllData()
+    confirmingReset.value = false
+    appStore.settingsDialogOpen = false
+  }
 
   const personDialogOpen = ref(false)
   const editingPerson = ref<Person | null>(null)

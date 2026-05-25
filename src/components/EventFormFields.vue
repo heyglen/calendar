@@ -36,8 +36,8 @@
         <AppTimeField
           label="Start time"
           :model-value="modelValue.startTime"
-          :use24-hour-clock="calendarStore.preferences.use24HourClock"
           style="flex: 1"
+          :use24-hour-clock="calendarStore.preferences.use24HourClock"
           @update:model-value="updateField('startTime', $event)"
         />
 
@@ -46,8 +46,8 @@
         <AppTimeField
           label="End time"
           :model-value="modelValue.endTime"
-          :use24-hour-clock="calendarStore.preferences.use24HourClock"
           style="flex: 1"
+          :use24-hour-clock="calendarStore.preferences.use24HourClock"
           @update:model-value="updateField('endTime', $event)"
         />
       </div>

@@ -402,11 +402,7 @@
       return
     }
     const hour = getHourFromY(e.offsetY)
-    if (isInSleepRange(hour)) {
-      hoveredHour.value = nearestAwakeHour(hour)
-    } else {
-      hoveredHour.value = hour
-    }
+    hoveredHour.value = isInSleepRange(hour) ? nearestAwakeHour(hour) : hour
     hoveredColumn.value = columnIndex
   }
 

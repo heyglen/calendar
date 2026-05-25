@@ -8,7 +8,7 @@ import VueRouter from 'vue-router/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/calendar/",
+  base: '/calendar/',
   plugins: [VueRouter({ dts: 'src/typed-router.d.ts' }), Vue({
     template: { transformAssetUrls },
   }), // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme

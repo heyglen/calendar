@@ -1,0 +1,1 @@
+import{_r as e,cr as t,n,qn as r}from"./index-CNa6eDhG.js";var i=t({__name:`settings`,setup(t){let i=r(),a=n();return e(()=>{i.replace(`/`),a.settingsDialogOpen=!0}),()=>{}}});export{i as default};

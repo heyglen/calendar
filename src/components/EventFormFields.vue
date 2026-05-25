@@ -17,18 +17,6 @@
       </div>
     </div>
 
-    <!-- Title -->
-    <v-text-field
-      class="mb-3"
-      density="compact"
-      hide-details
-      label="Title (optional)"
-      :model-value="modelValue.title"
-      prepend-inner-icon="mdi-text"
-      variant="outlined"
-      @update:model-value="updateField('title', $event)"
-    />
-
     <!-- Date -->
     <v-text-field
       class="mb-3"
@@ -68,6 +56,18 @@
         @update:model-value="updateField('endTime', $event)"
       />
     </div>
+
+    <!-- Title -->
+    <v-text-field
+      class="mb-3"
+      density="compact"
+      hide-details
+      label="Title (optional)"
+      :model-value="modelValue.title"
+      prepend-inner-icon="mdi-text"
+      variant="outlined"
+      @update:model-value="updateField('title', $event)"
+    />
 
     <!-- Advanced toggle -->
     <button class="event-form-fields__advanced-toggle mb-2" type="button" @click="showAdvanced = !showAdvanced">
@@ -223,7 +223,11 @@
     iconPreviewRef.value?.focus()
   }
 
-  defineExpose({ focusIconPreview })
+  function toggleAdvanced (): void {
+    showAdvanced.value = !showAdvanced.value
+  }
+
+  defineExpose({ focusIconPreview, toggleAdvanced })
 
   type EventDraft = Omit<CalendarEvent, 'id'>
 

@@ -42,40 +42,72 @@
         variant="outlined"
         @update:model-value="onViewChange"
       >
-        <v-btn size="small" value="upnext">
+        <v-btn size="small" style="position:relative" value="upnext">
+          <transition name="shortcut-chip">
+            <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+1</v-chip>
+          </transition>
           <v-icon icon="mdi-clock-fast" size="18" />
           <span class="ml-1 d-none d-md-inline">Up Next</span>
         </v-btn>
 
-        <v-btn size="small" value="day">
+        <v-btn size="small" style="position:relative" value="day">
+          <transition name="shortcut-chip">
+            <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+2</v-chip>
+          </transition>
           <v-icon icon="mdi-view-day" size="18" />
           <span class="ml-1 d-none d-md-inline">Day</span>
         </v-btn>
 
-        <v-btn size="small" value="week">
+        <v-btn size="small" style="position:relative" value="week">
+          <transition name="shortcut-chip">
+            <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+3</v-chip>
+          </transition>
           <v-icon icon="mdi-view-week" size="18" />
           <span class="ml-1 d-none d-md-inline">Week</span>
         </v-btn>
 
-        <v-btn size="small" value="month">
+        <v-btn size="small" style="position:relative" value="month">
+          <transition name="shortcut-chip">
+            <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+4</v-chip>
+          </transition>
           <v-icon icon="mdi-calendar-month" size="18" />
           <span class="ml-1 d-none d-md-inline">Month</span>
         </v-btn>
 
-        <v-btn size="small" value="year">
+        <v-btn size="small" style="position:relative" value="year">
+          <transition name="shortcut-chip">
+            <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+5</v-chip>
+          </transition>
           <v-icon icon="mdi-calendar-range" size="18" />
           <span class="ml-1 d-none d-md-inline">Year</span>
         </v-btn>
       </v-btn-toggle>
 
-      <v-btn
-        class="ml-2"
-        color="white"
-        density="compact"
-        icon="mdi-cog-outline"
-        variant="text"
-        @click="appStore.settingsDialogToggle()"
-      />
+      <div class="ml-2 toolbar-icon-wrap" style="position:relative">
+        <transition name="shortcut-chip">
+          <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+F1</v-chip>
+        </transition>
+        <v-btn
+          color="white"
+          density="compact"
+          icon="mdi-help-circle-outline"
+          variant="text"
+          @click="appStore.helpDialogToggle()"
+        />
+      </div>
+
+      <div class="toolbar-icon-wrap" style="position:relative">
+        <transition name="shortcut-chip">
+          <v-chip v-if="appStore.altKeyHeld" class="toolbar-shortcut-chip" color="primary" label size="x-small">Alt+,</v-chip>
+        </transition>
+        <v-btn
+          color="white"
+          density="compact"
+          icon="mdi-cog-outline"
+          variant="text"
+          @click="appStore.settingsDialogToggle()"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -84,6 +116,7 @@
   import { computed } from 'vue'
   import { useAppStore } from '@/stores/app'
   import { useCalendarStore } from '@/stores/calendar'
+  // appStore is used for altKeyHeld, helpDialogToggle, settingsDialogToggle
   import {
     addDays,
     addMonths,
@@ -197,5 +230,22 @@
 .toolbar-right {
   margin-left: auto;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-icon-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-shortcut-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-30%, -50%);
+  transform-origin: bottom right;
+  z-index: 10;
+  pointer-events: none;
 }
 </style>

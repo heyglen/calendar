@@ -10,19 +10,21 @@
       <PersonFilterBar v-if="calendarStore.preferences.people.length > 1" />
     </v-main>
 
-    <KeyboardShortcutsDialog v-model="showShortcutsHelp" />
+    <KeyboardShortcutsDialog v-model="appStore.helpDialogOpen" />
   </v-app>
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { onMounted, onUnmounted, watch } from 'vue'
   import { useTheme } from 'vuetify'
   import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+  import { useAppStore } from '@/stores/app'
   import { useCalendarStore } from '@/stores/calendar'
 
-  const showShortcutsHelp = ref(false)
+  const appStore = useAppStore()
+
   useKeyboardShortcuts(() => {
-    showShortcutsHelp.value = true
+    appStore.helpDialogOpen = true
   })
 
   const calendarStore = useCalendarStore()
@@ -35,6 +37,30 @@
     },
     { immediate: true },
   )
+
+  function onKeyDown (e: KeyboardEvent): void {
+    if (e.key === 'Alt') appStore.altKeyHeld = true
+  }
+
+  function onKeyUp (e: KeyboardEvent): void {
+    if (e.key === 'Alt') appStore.altKeyHeld = false
+  }
+
+  function onBlur (): void {
+    appStore.altKeyHeld = false
+  }
+
+  onMounted(() => {
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('keydown', onKeyDown)
+    window.removeEventListener('keyup', onKeyUp)
+    window.removeEventListener('blur', onBlur)
+  })
 </script>
 
 <style>
@@ -63,4 +89,29 @@
 .zoom-out-leave-to   { transform: scale(0.95); opacity: 0; }
 .zoom-in-enter-from  { transform: scale(0.95); opacity: 0; }
 .zoom-in-leave-to    { transform: scale(1.05); opacity: 0; }
+
+/* Vertical slide transitions for month view */
+.slide-up-enter-active,
+.slide-up-leave-active,
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.slide-up-enter-from   { transform: translateY(-40px); opacity: 0; }
+.slide-up-leave-to     { transform: translateY(40px);  opacity: 0; }
+.slide-down-enter-from { transform: translateY(40px);  opacity: 0; }
+.slide-down-leave-to   { transform: translateY(-40px); opacity: 0; }
+
+/* Add-event button slide-in from right */
+.add-btn-enter-active { transition: transform 0.18s ease, opacity 0.15s; }
+.add-btn-leave-active { transition: transform 0.1s ease, opacity 0.1s; }
+.add-btn-enter-from   { transform: translateX(18px); opacity: 0; }
+.add-btn-leave-to     { transform: translateX(18px); opacity: 0; }
+
+/* Shortcut chip grow/shrink */
+.shortcut-chip-enter-active { transition: transform 0.08s ease-out, opacity 0.08s; }
+.shortcut-chip-leave-active { transition: transform 0.08s ease-in,  opacity 0.08s; }
+.shortcut-chip-enter-from,
+.shortcut-chip-leave-to     { transform: translate(-30%, -50%) scale(0); opacity: 0; }
 </style>

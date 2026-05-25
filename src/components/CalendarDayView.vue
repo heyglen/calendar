@@ -16,6 +16,7 @@
           :sleep-start="sleepTimes.start"
           :use24-hour-clock="calendarStore.preferences.use24HourClock"
           @click:hour="onHourClick"
+          @click:sleep="openSleepSettings"
         />
       </div>
     </transition>
@@ -56,15 +57,27 @@
 
   const timedEvents = computed(() => {
     const timed = dayEvents.value.filter(e => !e.isAllDay && !e.isPinned)
-    if (calendarStore.preferences.showPastEvents || !isToday.value) return timed
-    return timed.filter(event => !isPastTime(selectedDate.value, event.endTime))
+    const filtered = calendarStore.preferences.showPastEvents || !isToday.value
+      ? timed
+      : timed.filter(event => !isPastTime(selectedDate.value, event.endTime))
+    const preview = appStore.previewEvent
+    if (preview && !preview.isAllDay && !preview.isPinned && preview.startDate === selectedDate.value) {
+      return [...filtered, preview as unknown as import('@/types/calendar').CalendarEvent]
+    }
+    return filtered
   })
 
   function onHourClick ({ time }: { time: string, columnIndex: number }): void {
     appStore.dialogEventOpen(null, time)
   }
 
+  function openSleepSettings (): void {
+    appStore.settingsInitialTab = 'sleep'
+    appStore.settingsDialogOpen = true
+  }
+
   function onKeyDown (e: KeyboardEvent): void {
+    if (appStore.settingsDialogOpen) return
     if (e.key === 'ArrowUp') {
       e.preventDefault()
       e.stopPropagation()
@@ -99,6 +112,13 @@
 
   watch(
     () => appStore.dialogEventIsOpen,
+    isOpen => {
+      if (!isOpen) dayViewRef.value?.focus()
+    },
+  )
+
+  watch(
+    () => appStore.settingsDialogOpen,
     isOpen => {
       if (!isOpen) dayViewRef.value?.focus()
     },

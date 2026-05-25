@@ -53,6 +53,7 @@
           gridColumn: `2 / span ${props.columnCount}`,
           gridRow: `${block.startRow} / span ${block.spanCount}`,
         }"
+        @click.stop="emit('click:sleep')"
       />
 
       <!-- Sleep boundary icons -->
@@ -106,16 +107,18 @@
           </div>
         </template>
 
-        <!-- Hover add-event button -->
-        <button
-          v-if="hoveredHour !== null && hoveredColumn === columnIndex && !isInSleepRange(hoveredHour)"
-          class="time-grid__add-event-btn"
-          :style="{ top: (getHourTop(hoveredHour) + 4) + 'px' }"
-          type="button"
-          @click.stop="emit('click:hour', { time: `${String(hoveredHour).padStart(2, '0')}:00`, columnIndex })"
-        >
-          <v-icon color="white" icon="mdi-plus" size="16" />
-        </button>
+        <!-- Add-event button (hover with debounce OR keyboard selection) -->
+        <transition name="add-btn">
+          <button
+            v-if="(showAddBtn && hoveredColumn === columnIndex && hoveredHour !== null && !isInSleepRange(hoveredHour)) || (props.selectedHour !== null && props.selectedHour !== undefined && !isInSleepRange(props.selectedHour) && hoveredHour === null && (props.selectedColumn === columnIndex || (props.selectedColumn === null && columnIndex === 0)))"
+            class="time-grid__add-event-btn"
+            :style="{ top: (getHourTop(showAddBtn && hoveredColumn === columnIndex && hoveredHour !== null ? hoveredHour : (props.selectedHour ?? 0)) + 4) + 'px' }"
+            type="button"
+            @click.stop="emit('click:hour', { time: `${String(showAddBtn && hoveredColumn === columnIndex && hoveredHour !== null ? hoveredHour : (props.selectedHour ?? 0)).padStart(2, '0')}:00`, columnIndex })"
+          >
+            <v-icon color="white" icon="mdi-plus" size="16" />
+          </button>
+        </transition>
 
         <!-- Current time indicator (inside column so position:absolute works reliably) -->
         <div
@@ -161,6 +164,7 @@
   const emit = defineEmits<{
     'click:hour': [payload: { time: string, columnIndex: number }]
     'overflow-click': [payload: { date: string | undefined, columnIndex: number }]
+    'click:sleep': []
   }>()
 
   const calendarStore = useCalendarStore()
@@ -169,6 +173,21 @@
   const hoveredColumn = ref<number | null>(null)
   const dropTargetMinutes = ref<number | null>(null)
   const dropTargetColumn = ref<number | null>(null)
+  const showAddBtn = ref(false)
+  let showAddBtnTimer: ReturnType<typeof setTimeout> | null = null
+
+  watch([hoveredHour, hoveredColumn], ([hour, col]) => {
+    if (showAddBtnTimer !== null) {
+      clearTimeout(showAddBtnTimer)
+      showAddBtnTimer = null
+    }
+    showAddBtn.value = false
+    if (hour !== null && col !== null && !isInSleepRange(hour)) {
+      showAddBtnTimer = setTimeout(() => {
+        showAddBtn.value = true
+      }, 350)
+    }
+  })
 
   const sleepStartHour = computed<number | null>(() => {
     if (!props.sleepStart) return null
@@ -365,7 +384,15 @@
   function onDayColumnClick (e: MouseEvent, columnIndex: number): void {
     if ((e.target as HTMLElement).closest('.event-block')) return
     const hour = getHourFromY(e.offsetY)
+    if (isInSleepRange(hour)) return
     emit('click:hour', { time: `${String(hour).padStart(2, '0')}:00`, columnIndex })
+  }
+
+  function nearestAwakeHour (hour: number): number {
+    const s = sleepStartHour.value
+    const e = sleepEndHour.value
+    if (s === null || e === null) return hour
+    return e
   }
 
   function onDayColumnMouseMove (e: MouseEvent, columnIndex: number): void {
@@ -374,7 +401,12 @@
       hoveredColumn.value = null
       return
     }
-    hoveredHour.value = getHourFromY(e.offsetY)
+    const hour = getHourFromY(e.offsetY)
+    if (isInSleepRange(hour)) {
+      hoveredHour.value = nearestAwakeHour(hour)
+    } else {
+      hoveredHour.value = hour
+    }
     hoveredColumn.value = columnIndex
   }
 
@@ -523,8 +555,9 @@
 
 .time-grid__sleep-block {
   background-color: rgba(44, 61, 85, 0.06);
-  pointer-events: none;
-  z-index: 0;
+  pointer-events: auto;
+  z-index: 2;
+  cursor: pointer;
 }
 
 .time-grid__sleep-icon {

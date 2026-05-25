@@ -425,7 +425,7 @@
 
 <script lang="ts" setup>
   import type { CalendarEvent, Person, SleepSchedule, WeekdayNumber } from '@/types/calendar'
-  import { computed, reactive, ref } from 'vue'
+  import { computed, reactive, ref, watch } from 'vue'
   import { useAppStore } from '@/stores/app'
   import { useCalendarStore } from '@/stores/calendar'
   import { PALETTE_COLORS } from '@/types/calendar'
@@ -435,6 +435,16 @@
   const calendarStore = useCalendarStore()
 
   const activeTab = ref('display')
+
+  watch(
+    () => appStore.settingsInitialTab,
+    tab => {
+      if (tab) {
+        activeTab.value = tab
+        appStore.settingsInitialTab = null
+      }
+    },
+  )
 
   const SETTINGS_TABS = ['display', 'sleep', 'people', 'data']
 

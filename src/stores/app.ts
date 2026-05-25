@@ -1,3 +1,4 @@
+import type { CalendarEvent } from '@/types/calendar'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -8,6 +9,10 @@ export const useAppStore = defineStore('app', () => {
   const selectedHour = ref<number | null>(null)
   const selectedWeekColumn = ref<number | null>(null)
   const settingsDialogOpen = ref(false)
+  const settingsInitialTab = ref<string | null>(null)
+  const helpDialogOpen = ref(false)
+  const altKeyHeld = ref(false)
+  const previewEvent = ref<(Omit<CalendarEvent, 'id'> & { id: '__preview__', isPreview: true }) | null>(null)
 
   // Task view
   const taskViewEventId = ref<string | null>(null)
@@ -53,6 +58,18 @@ export const useAppStore = defineStore('app', () => {
 
   function settingsDialogToggle (): void {
     settingsDialogOpen.value = !settingsDialogOpen.value
+  }
+
+  function helpDialogToggle (): void {
+    helpDialogOpen.value = !helpDialogOpen.value
+  }
+
+  function setPreviewEvent (event: Omit<CalendarEvent, 'id'> & { id: '__preview__', isPreview: true }): void {
+    previewEvent.value = event
+  }
+
+  function clearPreviewEvent (): void {
+    previewEvent.value = null
   }
 
   function taskViewOpen (eventId: string, date: string): void {
@@ -102,6 +119,10 @@ export const useAppStore = defineStore('app', () => {
     selectedHour,
     selectedWeekColumn,
     settingsDialogOpen,
+    settingsInitialTab,
+    helpDialogOpen,
+    altKeyHeld,
+    previewEvent,
     taskViewIsOpen,
     taskViewEventId,
     taskViewDate,
@@ -115,6 +136,9 @@ export const useAppStore = defineStore('app', () => {
     setSelectedHour,
     setSelectedWeekColumn,
     settingsDialogToggle,
+    helpDialogToggle,
+    setPreviewEvent,
+    clearPreviewEvent,
     taskViewOpen,
     taskViewClose,
     getCompletedSubTasks,

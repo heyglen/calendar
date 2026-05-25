@@ -7,7 +7,7 @@
     @after-enter="formFieldsRef?.focusIconPreview()"
     @update:model-value="onDialogToggle"
   >
-    <v-card ref="cardRef">
+    <v-card ref="cardRef" @keydown="onDialogKeyDown">
       <v-card-title
         class="pa-4 pb-0 d-flex align-center event-dialog__drag-handle"
         @mousedown="startDrag"
@@ -56,7 +56,7 @@
 
 <script lang="ts" setup>
   import type { CalendarEvent } from '@/types/calendar'
-  import { computed, ref, watch } from 'vue'
+  import { computed, ref, watch, watchEffect } from 'vue'
   import { DEFAULT_EVENT_DURATION_HOURS, DEFAULT_START_TIME } from '@/constants'
   import { useAppStore } from '@/stores/app'
   import { useCalendarStore } from '@/stores/calendar'
@@ -69,7 +69,7 @@
 
   const deleteConfirmOpen = ref(false)
   const cardRef = ref<{ $el: HTMLElement } | null>(null)
-  const formFieldsRef = ref<{ focusIconPreview: () => void } | null>(null)
+  const formFieldsRef = ref<{ focusIconPreview: () => void, toggleAdvanced: () => void } | null>(null)
 
   // Drag state
   const isDragging = ref(false)
@@ -153,6 +153,14 @@
     eventDraft.value.isAllDay || eventDraft.value.startTime < eventDraft.value.endTime,
   )
 
+  watchEffect(() => {
+    if (appStore.dialogEventIsOpen) {
+      appStore.setPreviewEvent({ ...eventDraft.value, id: '__preview__', isPreview: true })
+    } else {
+      appStore.clearPreviewEvent()
+    }
+  })
+
   watch(
     () => appStore.dialogEventIsOpen,
     isOpen => {
@@ -197,6 +205,16 @@
       calendarStore.calendarEventCreate(eventDraft.value)
     }
     appStore.dialogEventClose()
+  }
+
+  function onDialogKeyDown (e: KeyboardEvent): void {
+    if (e.altKey && e.key === 's') {
+      e.preventDefault()
+      saveEvent()
+    } else if (e.altKey && e.key === 'a') {
+      e.preventDefault()
+      formFieldsRef.value?.toggleAdvanced()
+    }
   }
 
   function deleteEvent (): void {

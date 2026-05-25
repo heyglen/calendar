@@ -52,13 +52,17 @@
                   :class="{
                     'month-view__event-pill--allday': event.isAllDay,
                     'month-view__event-pill--show-title': calendarStore.preferences.showEventTitles,
+                    'month-view__event-pill--preview': event.isPreview,
                   }"
-                  draggable="true"
-                  :style="{ backgroundColor: event.color }"
+                  :draggable="!event.isPreview"
+                  :style="{
+                    backgroundColor: event.color,
+                    '--pill-icon-size': `calc(${100 / cellEventsSlice(cell.date).length}cqh * 0.92)`,
+                  }"
                   :title="event.title || undefined"
-                  @click.stop="onEventClick(event, cell.date)"
-                  @dragend="onPillDragEnd"
-                  @dragstart="onPillDragStart($event, event)"
+                  @click.stop="event.isPreview ? undefined : onEventClick(event, cell.date)"
+                  @dragend="event.isPreview ? undefined : onPillDragEnd()"
+                  @dragstart="event.isPreview ? undefined : onPillDragStart($event, event)"
                 >
                   <v-icon
                     v-if="event.iconLibrary === 'mdi'"
@@ -117,7 +121,7 @@
   const weekdayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
   const slideName = computed(() =>
-    appStore.navigationDirection === 'forward' ? 'slide-left' : 'slide-right',
+    appStore.navigationDirection === 'forward' ? 'slide-down' : 'slide-up',
   )
 
   const monthKey = computed(() =>
@@ -139,10 +143,15 @@
     const filtered = personFilter.value
       ? all.filter(e => !e.personId || personFilter.value!.includes(e.personId))
       : all
-    return [
+    const visible = [
       ...filtered.filter(e => e.isAllDay && !e.hideFromMonthView),
       ...filtered.filter(e => !e.isAllDay && !e.hideFromMonthView),
     ]
+    const preview = appStore.previewEvent
+    if (preview && !preview.hideFromMonthView && preview.startDate === dateString) {
+      visible.push(preview as unknown as CalendarEvent)
+    }
+    return visible
   }
 
   function cellEventsSlice (dateString: string): CalendarEvent[] {
@@ -198,28 +207,29 @@
   function onKeyDown (e: KeyboardEvent): void {
     const tag = (e.target as HTMLElement).tagName
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
+    if (appStore.settingsDialogOpen) return
+
+    const offsets: Partial<Record<string, number>> = {
+      ArrowLeft: -1,
+      ArrowRight: 1,
+      ArrowUp: -7,
+      ArrowDown: 7,
+    }
+
+    if (offsets[e.key] !== undefined) {
+      e.preventDefault()
+      const newCell = addDays(selectedCell.value, offsets[e.key]!)
+      selectedCell.value = newCell
+      const newMonth = newCell.slice(0, 7)
+      const currentMonth = calendarStore.preferences.selectedDate.slice(0, 7)
+      if (newMonth !== currentMonth) {
+        appStore.setNavigationDirection(newMonth > currentMonth ? 'forward' : 'backward')
+        calendarStore.viewPreferenceSetDate(newCell)
+      }
+      return
+    }
 
     switch (e.key) {
-      case 'ArrowLeft': {
-        e.preventDefault()
-        selectedCell.value = addDays(selectedCell.value, -1)
-        break
-      }
-      case 'ArrowRight': {
-        e.preventDefault()
-        selectedCell.value = addDays(selectedCell.value, 1)
-        break
-      }
-      case 'ArrowUp': {
-        e.preventDefault()
-        selectedCell.value = addDays(selectedCell.value, -7)
-        break
-      }
-      case 'ArrowDown': {
-        e.preventDefault()
-        selectedCell.value = addDays(selectedCell.value, 7)
-        break
-      }
       case 'Enter': {
         e.preventDefault()
         navigateToDayView(selectedCell.value)
@@ -231,6 +241,13 @@
       }
     }
   }
+
+  watch(
+    () => appStore.settingsDialogOpen,
+    isOpen => {
+      if (!isOpen) monthViewRef.value?.focus()
+    },
+  )
 
   onMounted(() => {
     monthViewRef.value?.focus()
@@ -404,6 +421,7 @@
   flex: 1;
   gap: 1px;
   min-height: 0;
+  container-type: size;
 }
 
 .month-view__event-pill {
@@ -411,25 +429,30 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  padding: 2px 4px;
+  padding: 1px 2px;
   border-radius: 3px;
   overflow: hidden;
   cursor: pointer;
   flex: 1;
   min-height: 0;
   position: relative;
-  container-type: size;
+}
+
+.month-view__event-pill--preview {
+  opacity: 0.6;
+  pointer-events: none;
+  border: 1px dashed rgba(255,255,255,0.7);
 }
 
 .month-view__event-icon {
-  font-size: 90cqh !important;
-  width: 90cqh;
-  height: 90cqh;
+  font-size: var(--pill-icon-size, 16px) !important;
+  width: var(--pill-icon-size, 16px) !important;
+  height: var(--pill-icon-size, 16px) !important;
   flex-shrink: 0;
 }
 
 .month-view__event-fa-icon {
-  font-size: 90cqh;
+  font-size: var(--pill-icon-size, 16px) !important;
   color: white;
   flex-shrink: 0;
   line-height: 1;

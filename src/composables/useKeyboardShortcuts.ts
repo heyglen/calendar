@@ -53,6 +53,8 @@ export function useKeyboardShortcuts (onShowHelp: () => void): void {
     }
   }
 
+  const VIEW_CYCLE: Array<'upnext' | 'day' | 'week' | 'month' | 'year'> = ['upnext', 'day', 'week', 'month', 'year']
+
   function onKeyDown (e: KeyboardEvent): void {
     const tag = (e.target as HTMLElement).tagName
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) {
@@ -61,10 +63,29 @@ export function useKeyboardShortcuts (onShowHelp: () => void): void {
     if (appStore.dialogEventIsOpen && e.key !== 'Escape') {
       return
     }
+    if (appStore.settingsDialogOpen && e.key !== 'Escape' && !(e.altKey && e.key === ',')) {
+      return
+    }
+
+    if (e.altKey && e.key === 'F1') {
+      e.preventDefault()
+      onShowHelp()
+      return
+    }
 
     if (e.altKey && e.key === ',') {
       e.preventDefault()
       appStore.settingsDialogToggle()
+      return
+    }
+
+    if (e.shiftKey && e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+      e.preventDefault()
+      const cur = VIEW_CYCLE.indexOf(calendarStore.preferences.view)
+      const next = e.key === 'ArrowRight'
+        ? (cur + 1) % VIEW_CYCLE.length
+        : (cur - 1 + VIEW_CYCLE.length) % VIEW_CYCLE.length
+      navigateToView(VIEW_CYCLE[next])
       return
     }
 

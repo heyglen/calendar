@@ -2,13 +2,16 @@
   <div
     ref="blockEl"
     class="event-block"
-    :class="{ 'event-block--show-titles': calendarStore.preferences.showEventTitles }"
-    draggable="true"
+    :class="{
+      'event-block--show-titles': calendarStore.preferences.showEventTitles,
+      'event-block--preview': event.isPreview,
+    }"
+    :draggable="!event.isPreview"
     :style="blockStyle"
     :title="event.title || undefined"
-    @click.stop="handleClick"
-    @dragend="onDragEnd"
-    @dragstart="onDragStart"
+    @click.stop="event.isPreview ? undefined : handleClick()"
+    @dragend="event.isPreview ? undefined : onDragEnd()"
+    @dragstart="event.isPreview ? undefined : onDragStart($event)"
   >
     <div class="event-block__icon-wrapper">
       <v-icon
@@ -114,6 +117,12 @@
 .event-block:hover {
   filter: brightness(1.1);
   transform: scale(1.02);
+}
+
+.event-block--preview {
+  opacity: 0.6;
+  pointer-events: none;
+  border-style: dashed;
 }
 
 .event-block[draggable='true'] {

@@ -45,6 +45,7 @@ export interface CalendarEvent {
   isPinned?: boolean
   hideFromMonthView?: boolean
   hasTimer?: boolean
+  isPreview?: boolean
 }
 
 export interface SleepTime {

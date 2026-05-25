@@ -1,57 +1,40 @@
 <template>
-  <div class="year-view">
+  <div
+    ref="yearViewRef"
+    class="year-view"
+    tabindex="0"
+    @keydown="onKeyDown"
+  >
     <div class="year-view__year-title">{{ selectedYear }}</div>
 
     <div class="year-view__grid">
       <div
-        v-for="monthDate in twelveMonths"
+        v-for="(monthDate, index) in twelveMonths"
         :key="monthDate"
         class="year-view__month-card"
+        :class="{ 'year-view__month-card--selected': index === selectedMonthIndex }"
         @click="navigateToMonth(monthDate)"
       >
         <div class="year-view__month-title">{{ getMonthName(monthDate) }}</div>
-        <!-- Mini weekday headers -->
-        <div class="year-view__mini-headers">
-          <span v-for="(d, i) in miniWeekdayNames" :key="i" class="year-view__mini-header">{{ d }}</span>
-        </div>
-        <!-- Mini day grid -->
-        <div class="year-view__mini-grid">
-          <div
-            v-for="cell in getMiniMonth(monthDate)"
-            :key="cell.date"
-            class="year-view__mini-cell"
-            :class="{
-              'year-view__mini-cell--other-month': !cell.isCurrentMonth,
-              'year-view__mini-cell--today': isSameDate(cell.date, todayDate),
-            }"
-          >
-            <span class="year-view__mini-day">{{ getDayNumber(cell.date) }}</span>
-            <span v-if="cell.isCurrentMonth && hasEvents(cell.date)" class="year-view__dot" />
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
-  import { getEventsForDate } from '@/composables/useRecurrence'
+  import { computed, onMounted, ref, watch } from 'vue'
+  import { useAppStore } from '@/stores/app'
   import { useCalendarStore } from '@/stores/calendar'
   import {
     formatDate,
-    getDayNumber,
-    getMonthGridDates,
     getMonthName,
     getYear,
-    isSameDate,
-    today,
   } from '@/utils/dateUtils'
 
   const calendarStore = useCalendarStore()
+  const appStore = useAppStore()
 
-  const todayDate = today()
-  const miniWeekdayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  const yearViewRef = ref<HTMLElement | null>(null)
 
   const selectedYear = computed(() => getYear(calendarStore.preferences.selectedDate))
 
@@ -62,18 +45,70 @@
     }),
   )
 
-  function getMiniMonth (monthDate: string) {
-    return getMonthGridDates(monthDate)
-  }
+  const selectedMonthIndex = ref(new Date(calendarStore.preferences.selectedDate).getMonth())
 
-  function hasEvents (dateString: string): boolean {
-    return getEventsForDate(calendarStore.events, dateString).length > 0
-  }
+  watch(
+    () => calendarStore.preferences.selectedDate,
+    date => {
+      selectedMonthIndex.value = new Date(date).getMonth()
+    },
+  )
 
   function navigateToMonth (monthDate: string): void {
     calendarStore.viewPreferenceSetDate(monthDate)
     calendarStore.viewPreferenceSetView('month')
   }
+
+  function onKeyDown (e: KeyboardEvent): void {
+    if (appStore.settingsDialogOpen) return
+
+    const COLS = 4
+    const cur = selectedMonthIndex.value
+
+    switch (e.key) {
+      case 'ArrowLeft': {
+        e.preventDefault()
+        e.stopPropagation()
+        selectedMonthIndex.value = (cur - 1 + 12) % 12
+        break
+      }
+      case 'ArrowRight': {
+        e.preventDefault()
+        e.stopPropagation()
+        selectedMonthIndex.value = (cur + 1) % 12
+        break
+      }
+      case 'ArrowUp': {
+        e.preventDefault()
+        e.stopPropagation()
+        selectedMonthIndex.value = Math.max(0, cur - COLS)
+        break
+      }
+      case 'ArrowDown': {
+        e.preventDefault()
+        e.stopPropagation()
+        selectedMonthIndex.value = Math.min(11, cur + COLS)
+        break
+      }
+      case 'Enter': {
+        e.preventDefault()
+        navigateToMonth(twelveMonths.value[selectedMonthIndex.value])
+        break
+      }
+      // No default
+    }
+  }
+
+  watch(
+    () => appStore.settingsDialogOpen,
+    isOpen => {
+      if (!isOpen) yearViewRef.value?.focus()
+    },
+  )
+
+  onMounted(() => {
+    yearViewRef.value?.focus()
+  })
 </script>
 
 <style scoped>
@@ -81,6 +116,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  outline: none;
 }
 
 .year-view__year-title {
@@ -122,9 +158,13 @@
   background: var(--v-theme-surface);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
-  padding: 10px;
+  padding: 16px 10px;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
 }
 
 .year-view__month-card:hover {
@@ -132,66 +172,17 @@
   border-color: rgba(0, 0, 0, 0.15);
 }
 
+.year-view__month-card--selected {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: -2px;
+  background-color: rgba(var(--v-theme-primary), 0.05);
+}
+
 .year-view__month-title {
-  font-size: 0.8rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #3e4c5e;
-  margin-bottom: 6px;
-}
-
-.year-view__mini-headers {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 2px;
-}
-
-.year-view__mini-header {
-  font-size: 0.55rem;
-  color: rgba(0, 0, 0, 0.35);
   text-align: center;
-  font-weight: 500;
-}
-
-.year-view__mini-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-}
-
-.year-view__mini-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  padding: 1px 0;
-}
-
-.year-view__mini-cell--other-month .year-view__mini-day {
-  opacity: 0.3;
-}
-
-.year-view__mini-cell--today .year-view__mini-day {
-  background-color: #3e4c5e;
-  color: white;
-  border-radius: 50%;
-}
-
-.year-view__mini-day {
-  font-size: 0.6rem;
-  color: #3e4c5e;
-  width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.year-view__dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background-color: #3e4c5e;
-  opacity: 0.6;
+  margin-bottom: 0;
 }
 </style>

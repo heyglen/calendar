@@ -40,6 +40,7 @@
             :sleep-start="weekSleepTimes.start"
             :use24-hour-clock="calendarStore.preferences.use24HourClock"
             @click:hour="onHourClick"
+            @click:sleep="openSleepSettings"
             @overflow-click="onOverflowClick"
           />
         </div>
@@ -90,9 +91,14 @@
   const timedColumns = computed(() =>
     eventColumns.value.map((col, i) => {
       const timed = col.filter(e => !e.isAllDay)
-      const isColToday = isSameDate(weekDates.value[i], todayDate)
-      if (calendarStore.preferences.showPastEvents || !isColToday) return timed
-      return timed.filter(e => !isPastTime(weekDates.value[i], e.endTime))
+      const filtered = calendarStore.preferences.showPastEvents || !isSameDate(weekDates.value[i], todayDate)
+        ? timed
+        : timed.filter(e => !isPastTime(weekDates.value[i], e.endTime))
+      const preview = appStore.previewEvent
+      if (preview && !preview.isAllDay && !preview.isPinned && preview.startDate === weekDates.value[i]) {
+        return [...filtered, preview as unknown as import('@/types/calendar').CalendarEvent]
+      }
+      return filtered
     }),
   )
 
@@ -108,12 +114,18 @@
     appStore.dialogEventOpen(null, time)
   }
 
+  function openSleepSettings (): void {
+    appStore.settingsInitialTab = 'sleep'
+    appStore.settingsDialogOpen = true
+  }
+
   function onOverflowClick ({ date }: { date: string | undefined, columnIndex: number }): void {
     if (date) calendarStore.viewPreferenceSetDate(date)
     calendarStore.viewPreferenceSetView('day')
   }
 
   function onKeyDown (e: KeyboardEvent): void {
+    if (appStore.settingsDialogOpen) return
     const col = appStore.selectedWeekColumn ?? 0
     const hour = appStore.selectedHour ?? new Date().getHours()
 
@@ -182,6 +194,13 @@
 
   watch(
     () => appStore.dialogEventIsOpen,
+    isOpen => {
+      if (!isOpen) weekViewRef.value?.focus()
+    },
+  )
+
+  watch(
+    () => appStore.settingsDialogOpen,
     isOpen => {
       if (!isOpen) weekViewRef.value?.focus()
     },

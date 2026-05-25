@@ -93,7 +93,7 @@
 
 <script lang="ts" setup>
   import type { CalendarEvent } from '@/types/calendar'
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { dragState } from '@/composables/useDragDrop'
   import { getEventsForDate } from '@/composables/useRecurrence'
   import { useAppStore } from '@/stores/app'

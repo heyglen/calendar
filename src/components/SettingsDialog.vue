@@ -130,23 +130,21 @@
                 />
 
                 <template v-if="isWeekdayOverrideEnabled(weekday)">
-                  <AppTimeField
-                    label="Bedtime"
-                    :model-value="getWeekdayTime(weekday, 'start')"
-                    style="max-width: 140px"
-                    :use24-hour-clock="calendarStore.preferences.use24HourClock"
-                    @update:model-value="updateWeekdayTime(weekday, 'start', $event)"
-                  />
+                  <div class="sleep-weekday-times">
+                    <AppTimeField
+                      label="Bedtime"
+                      :model-value="getWeekdayTime(weekday, 'start')"
+                      :use24-hour-clock="calendarStore.preferences.use24HourClock"
+                      @update:model-value="updateWeekdayTime(weekday, 'start', $event)"
+                    />
 
-                  <v-icon color="medium-emphasis" icon="mdi-arrow-right" size="14" />
-
-                  <AppTimeField
-                    label="Wake up"
-                    :model-value="getWeekdayTime(weekday, 'end')"
-                    style="max-width: 140px"
-                    :use24-hour-clock="calendarStore.preferences.use24HourClock"
-                    @update:model-value="updateWeekdayTime(weekday, 'end', $event)"
-                  />
+                    <AppTimeField
+                      label="Wake up"
+                      :model-value="getWeekdayTime(weekday, 'end')"
+                      :use24-hour-clock="calendarStore.preferences.use24HourClock"
+                      @update:model-value="updateWeekdayTime(weekday, 'end', $event)"
+                    />
+                  </div>
                 </template>
               </div>
             </div>
@@ -286,39 +284,53 @@
 
           <!-- Data -->
           <v-window-item class="pa-4" value="data">
-            <div class="text-caption text-medium-emphasis mb-3">
-              Export your events as a JSON file, or paste a previously exported file to restore.
-            </div>
+            <v-tabs v-model="dataTab" color="primary" density="compact" class="mb-4">
+              <v-tab value="export">Export</v-tab>
+              <v-tab value="import">Import</v-tab>
+            </v-tabs>
 
-            <v-btn
-              class="mb-4"
-              color="secondary"
-              prepend-icon="mdi-download"
-              variant="tonal"
-              @click="exportData"
-            >
-              Export JSON
-            </v-btn>
+            <v-window v-model="dataTab">
+              <v-window-item value="export">
+                <div class="text-caption text-medium-emphasis mb-3">
+                  Download all your events as a JSON backup file.
+                </div>
 
-            <v-textarea
-              v-model="importJson"
-              class="mb-2"
-              :error-messages="importError ? [importError] : []"
-              hide-details="auto"
-              label="Paste exported JSON here"
-              rows="5"
-              variant="outlined"
-            />
+                <v-btn
+                  color="secondary"
+                  prepend-icon="mdi-download"
+                  variant="tonal"
+                  @click="exportData"
+                >
+                  Export JSON
+                </v-btn>
+              </v-window-item>
 
-            <v-btn
-              color="primary"
-              :disabled="!importJson.trim()"
-              prepend-icon="mdi-upload"
-              variant="flat"
-              @click="doImportData"
-            >
-              Import
-            </v-btn>
+              <v-window-item value="import">
+                <div class="text-caption text-medium-emphasis mb-3">
+                  Paste a previously exported JSON file to restore your events.
+                </div>
+
+                <v-textarea
+                  v-model="importJson"
+                  class="mb-2"
+                  :error-messages="importError ? [importError] : []"
+                  hide-details="auto"
+                  label="Paste exported JSON here"
+                  rows="5"
+                  variant="outlined"
+                />
+
+                <v-btn
+                  color="primary"
+                  :disabled="!importJson.trim()"
+                  prepend-icon="mdi-upload"
+                  variant="flat"
+                  @click="doImportData"
+                >
+                  Import
+                </v-btn>
+              </v-window-item>
+            </v-window>
 
             <v-snackbar v-model="importSuccess" color="success" timeout="3000">
               Data imported successfully.
@@ -337,39 +349,30 @@
       <v-card-text class="pa-4">
         <!-- Avatar preview + upload -->
         <div class="d-flex align-center gap-4 mb-4">
-          <v-avatar
-            :color="personDraft.avatarBase64 ? undefined : (personDraft.color || '#2980b9')"
-            :image="personDraft.avatarBase64 || undefined"
-            size="56"
-            style="cursor: pointer"
-            @click="triggerAvatarUpload"
-          >
-            <span v-if="!personDraft.avatarBase64" class="text-h6 text-white font-weight-bold">
-              {{ personDraft.name ? personDraft.name.charAt(0).toUpperCase() : '?' }}
-            </span>
-          </v-avatar>
-
-          <div>
-            <v-btn
-              prepend-icon="mdi-camera"
-              size="small"
-              variant="tonal"
-              @click="triggerAvatarUpload"
+          <div class="person-avatar-wrapper" @click="triggerAvatarUpload">
+            <v-avatar
+              :color="personDraft.avatarBase64 ? undefined : (personDraft.color || '#2980b9')"
+              :image="personDraft.avatarBase64 || undefined"
+              size="56"
             >
-              {{ personDraft.avatarBase64 ? 'Change photo' : 'Add photo' }}
-            </v-btn>
-
-            <v-btn
-              v-if="personDraft.avatarBase64"
-              class="ml-2"
-              color="error"
-              size="small"
-              variant="text"
-              @click="personDraft.avatarBase64 = undefined"
-            >
-              Remove
-            </v-btn>
+              <span v-if="!personDraft.avatarBase64" class="text-h6 text-white font-weight-bold">
+                {{ personDraft.name ? personDraft.name.charAt(0).toUpperCase() : '?' }}
+              </span>
+            </v-avatar>
+            <div class="person-avatar-overlay">
+              <v-icon color="white" icon="mdi-camera" size="18" />
+            </div>
           </div>
+
+          <v-btn
+            v-if="personDraft.avatarBase64"
+            color="error"
+            size="small"
+            variant="text"
+            @click="personDraft.avatarBase64 = undefined"
+          >
+            Remove photo
+          </v-btn>
 
           <input
             ref="avatarFileInput"
@@ -459,6 +462,7 @@
   }
 
   const THEMES = [
+    { label: 'System', value: 'system' },
     { label: 'Light', value: 'light' },
     { label: 'Dark', value: 'dark' },
     { label: 'Warm', value: 'warm' },
@@ -553,6 +557,7 @@
 
   // ─── People / data ────────────────────────────────────────────────────────────
 
+  const dataTab = ref('export')
   const importJson = ref('')
   const importError = ref('')
   const importSuccess = ref(false)
@@ -678,14 +683,16 @@
 
 .sleep-weekday-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
 }
 
-.sleep-weekday-row .v-checkbox {
-  min-width: 130px;
-  flex-shrink: 0;
+.sleep-weekday-times {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 36px;
 }
 
 .sleep-override-row {
@@ -709,5 +716,28 @@
 .settings-dialog__panel {
   flex: 1;
   overflow-y: auto;
+}
+
+.person-avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.person-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.person-avatar-wrapper:hover .person-avatar-overlay {
+  opacity: 1;
 }
 </style>

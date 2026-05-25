@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="isOpen" max-width="520" scrollable>
-    <v-card>
+  <v-dialog v-model="isOpen" max-width="520" persistent scrollable>
+    <v-card @keydown="onCardKeyDown">
       <v-card-title class="pa-4 pb-2 d-flex align-center">
         <span class="text-h6">Icon &amp; Color</span>
         <v-spacer />
@@ -47,6 +47,7 @@
         <div class="text-caption font-weight-medium text-medium-emphasis mb-2 text-uppercase" style="letter-spacing:0.06em">Icon</div>
 
         <v-text-field
+          ref="searchFieldRef"
           v-model="searchQuery"
           class="mb-3"
           clearable
@@ -89,7 +90,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { nextTick, ref, watch } from 'vue'
   import { filterIcons, type IconDescriptor } from '@/data/iconLibrary'
   import { PALETTE_COLORS } from '@/types/calendar'
 
@@ -106,6 +107,7 @@
 
   const searchQuery = ref('')
   const localColor = ref(props.selectedColor)
+  const searchFieldRef = ref<any>(null)
 
   watch(() => props.selectedColor, c => {
     localColor.value = c
@@ -114,6 +116,10 @@
     if (open) {
       localColor.value = props.selectedColor
       searchQuery.value = ''
+      nextTick(() => {
+        const input = searchFieldRef.value?.$el?.querySelector('input')
+        input?.focus()
+      })
     }
   })
 
@@ -126,6 +132,22 @@
   function selectIcon (descriptor: IconDescriptor): void {
     emit('select:icon', descriptor, localColor.value)
     isOpen.value = false
+  }
+
+  function onCardKeyDown (e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      isOpen.value = false
+      return
+    }
+    if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault()
+      const idx = PALETTE_COLORS.indexOf(localColor.value)
+      const len = PALETTE_COLORS.length
+      localColor.value = PALETTE_COLORS[
+        e.key === 'ArrowLeft' ? (idx - 1 + len) % len : (idx + 1) % len
+      ]
+    }
   }
 </script>
 
@@ -151,9 +173,9 @@
 }
 
 .color-swatch--selected {
-  border-color: rgba(0, 0, 0, 0.5);
+  border-color: rgba(var(--v-theme-on-surface), 0.5);
   transform: scale(1.15);
-  box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 2px rgb(var(--v-theme-surface)), 0 0 0 4px rgba(var(--v-theme-on-surface), 0.3);
 }
 
 .icon-grid {

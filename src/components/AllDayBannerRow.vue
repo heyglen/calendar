@@ -95,7 +95,7 @@
 .all-day-banner {
   display: flex;
   align-items: flex-start;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.15);
   background: var(--v-theme-surface);
   flex-shrink: 0;
   min-height: 40px;
@@ -106,7 +106,7 @@
   width: 56px;
   flex-shrink: 0;
   font-size: 0.65rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(var(--v-theme-on-surface), 0.55);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 500;

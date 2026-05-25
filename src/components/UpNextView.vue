@@ -33,7 +33,7 @@
           <!-- Empty state: fills entire content area -->
           <template v-if="currentEvents.length === 0 && upcomingEvents.length === 0 && pinnedEvents.length === 0">
             <div class="up-next__empty">
-              <v-icon class="up-next__empty-icon" color="rgba(0,0,0,0.2)" icon="mdi-check-circle-outline" />
+              <v-icon class="up-next__empty-icon up-next__empty-icon--faded" icon="mdi-check-circle-outline" />
               <div class="up-next__empty-text">Nothing scheduled</div>
             </div>
           </template>
@@ -395,9 +395,13 @@
   height: 90cqh !important;
 }
 
+.up-next__empty-icon--faded {
+  color: rgba(var(--v-theme-on-surface), 0.2) !important;
+}
+
 .up-next__empty-text {
   font-size: 1rem;
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(var(--v-theme-on-surface), 0.3);
   font-weight: 500;
 }
 

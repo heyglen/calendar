@@ -525,7 +525,7 @@
 .time-grid__hour-label {
   padding: 4px 6px 0 4px;
   font-size: 0.65rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(var(--v-theme-on-surface), 0.55);
   text-align: right;
   user-select: none;
   line-height: 1;
@@ -536,13 +536,13 @@
 }
 
 .time-grid__divider {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.15);
   pointer-events: none;
   z-index: 0;
 }
 
 .time-grid__col-separator {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   pointer-events: none;
   z-index: 0;
 }
@@ -554,7 +554,7 @@
 }
 
 .time-grid__sleep-block {
-  background-color: rgba(44, 61, 85, 0.06);
+  background-color: rgba(var(--v-theme-on-surface), 0.08);
   pointer-events: auto;
   z-index: 2;
   cursor: pointer;
@@ -562,7 +562,7 @@
 
 .time-grid__sleep-icon {
   z-index: 3;
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(var(--v-theme-on-surface), 0.55);
   display: flex;
   align-items: center;
   pointer-events: none;

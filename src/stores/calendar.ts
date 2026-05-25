@@ -77,7 +77,7 @@ function loadPreferencesFromStorage (): AppPreferences {
     },
     people: [],
     activePersonFilter: null,
-    theme: 'light',
+    theme: 'system',
     showEventTitles: false,
   }
   try {

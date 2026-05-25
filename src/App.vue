@@ -30,13 +30,17 @@
   const calendarStore = useCalendarStore()
   const vuetifyTheme = useTheme()
 
-  watch(
-    () => calendarStore.preferences.theme,
-    theme => {
-      if (theme) vuetifyTheme.global.name.value = theme
-    },
-    { immediate: true },
-  )
+  const systemMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+
+  function applyTheme (theme: string | undefined): void {
+    if (!theme) return
+    const resolved = theme === 'system'
+      ? (systemMediaQuery.matches ? 'dark' : 'light')
+      : theme
+    vuetifyTheme.global.name.value = resolved
+  }
+
+  watch(() => calendarStore.preferences.theme, applyTheme, { immediate: true })
 
   function onKeyDown (e: KeyboardEvent): void {
     if (e.key === 'Alt') appStore.altKeyHeld = true
@@ -50,16 +54,24 @@
     appStore.altKeyHeld = false
   }
 
+  function onSystemThemeChange (): void {
+    if (calendarStore.preferences.theme === 'system') {
+      applyTheme('system')
+    }
+  }
+
   onMounted(() => {
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
     window.addEventListener('blur', onBlur)
+    systemMediaQuery.addEventListener('change', onSystemThemeChange)
   })
 
   onUnmounted(() => {
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
     window.removeEventListener('blur', onBlur)
+    systemMediaQuery.removeEventListener('change', onSystemThemeChange)
   })
 </script>
 

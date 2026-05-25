@@ -31,30 +31,31 @@
     />
 
     <!-- Time range (hidden when all day) -->
-    <div v-if="!modelValue.isAllDay" class="event-form-fields__time-row mb-3">
-      <v-text-field
-        density="compact"
-        hide-details
-        label="Start time"
-        :model-value="modelValue.startTime"
-        prepend-inner-icon="mdi-clock-outline"
-        type="time"
-        variant="outlined"
-        @update:model-value="updateField('startTime', $event)"
-      />
+    <div v-if="!modelValue.isAllDay" class="mb-3">
+      <div class="event-form-fields__time-row">
+        <AppTimeField
+          label="Start time"
+          :model-value="modelValue.startTime"
+          :use24-hour-clock="calendarStore.preferences.use24HourClock"
+          style="flex: 1"
+          @update:model-value="updateField('startTime', $event)"
+        />
 
-      <span class="event-form-fields__time-separator text-medium-emphasis">–</span>
+        <span class="event-form-fields__time-separator text-medium-emphasis">–</span>
 
-      <v-text-field
-        density="compact"
-        hide-details
-        label="End time"
-        :model-value="modelValue.endTime"
-        prepend-inner-icon="mdi-clock-outline"
-        type="time"
-        variant="outlined"
-        @update:model-value="updateField('endTime', $event)"
-      />
+        <AppTimeField
+          label="End time"
+          :model-value="modelValue.endTime"
+          :use24-hour-clock="calendarStore.preferences.use24HourClock"
+          style="flex: 1"
+          @update:model-value="updateField('endTime', $event)"
+        />
+      </div>
+
+      <div v-if="sleepTimeError" class="text-caption text-error mt-1">
+        <v-icon size="14">mdi-sleep</v-icon>
+        {{ sleepTimeError }}
+      </div>
     </div>
 
     <!-- Title -->
@@ -247,6 +248,33 @@
     calendarStore.preferences.people.map(p => ({ title: p.name, value: p.id })),
   )
 
+  function timeToMinutes (time: string): number {
+    const [h, m] = (time || '00:00').split(':').map(Number)
+    return h * 60 + m
+  }
+
+  function formatTimePref (time: string): string {
+    const [h, m] = time.split(':').map(Number)
+    if (calendarStore.preferences.use24HourClock) {
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    }
+    const period = h < 12 ? 'AM' : 'PM'
+    const h12 = h % 12 === 0 ? 12 : h % 12
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`
+  }
+
+  const sleepTimeError = computed<string | null>(() => {
+    if (props.modelValue.isAllDay) return null
+    const { start, end } = calendarStore.getSleepTimesForDate(props.modelValue.startDate)
+    if (!start || !end) return null
+    const s = timeToMinutes(start)
+    const e = timeToMinutes(end)
+    const t = timeToMinutes(props.modelValue.startTime)
+    const inSleep = s > e ? (t >= s || t < e) : (t >= s && t < e)
+    if (!inSleep) return null
+    return `Can't schedule during sleep time (${formatTimePref(start)}–${formatTimePref(end)})`
+  })
+
   function updateField<Key extends keyof EventDraft> (field: Key, value: EventDraft[Key]): void {
     emit('update:modelValue', { ...props.modelValue, [field]: value })
   }
@@ -321,7 +349,7 @@
   align-items: center;
   gap: 4px;
   font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(var(--v-theme-on-surface), 0.6);
   background: none;
   border: none;
   cursor: pointer;
@@ -330,11 +358,11 @@
 }
 
 .event-form-fields__advanced-toggle:hover {
-  color: rgba(0, 0, 0, 0.75);
+  color: rgba(var(--v-theme-on-surface), 0.85);
 }
 
 .event-form-fields__advanced {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   padding-top: 12px;
   margin-top: 4px;
 }
